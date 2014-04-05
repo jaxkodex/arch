@@ -1,15 +1,6 @@
 
 
 var LiveUser = Backbone.Model.extend({
-	initialize: function (options) {
-		var access_token = options.access_token;
-		this.getAccessToken = function () {
-			return access_token;
-		}
-	},
-	url: function () {
-		return 'https://apis.live.net/v5.0/me?'+this.getAccessToken();
-	}
 });
 
 var OneDriveDocument = Backbone.Model.extend({
