@@ -31,11 +31,19 @@ app.ListView = app.View.extend({
 });
 
 app.LayoutView = Backbone.View.extend({
+	initialize: function (options) {
+		var me = this;
+		_.each(this.regions, function (value, key) {
+			if (options[value]) {
+				me[value] = options[value]
+			}
+		});
+	},
 	render: function () {
 		var me = this;
 		this.$el.empty().html(this.template());
 		_.each(this.regions, function (value, key) {
-			me.$(value).empty().append(me[key].render().el);
+			me.$(key).empty().append(me[value].render().el);
 		});
 		return this;
 	}
