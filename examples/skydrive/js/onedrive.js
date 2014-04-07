@@ -27,10 +27,11 @@ var OneDriveDocumentCollection = Backbone.Collection.extend({
 });
 
 var FolderItemView = app.View.extend({
+	className: 'contenido-directorio',
 	events: {
 		'click .show-contents': 'navigate'
 	},
-	template: _.template('<a class="show-contents" href="#"><%=name%></a>'),
+	template: _.template('<% if (typeof type != "undefined" && type == "photo") { %><img src="<%=source%>" /> <% } %><span class="folder-icon glyphicon <% if (typeof type != "undefined" && type == "folder") { %>glyphicon-folder-close <% } else { %>glyphicon-file<% } %>"></span> <a class="show-contents" href="#"><span><%=name%><span></a>'),
 	navigate: function (evt) {
 		evt.preventDefault();
 		if (this.model.get('type') == 'folder')
@@ -41,26 +42,58 @@ var FolderItemView = app.View.extend({
 });
 
 var FolderContentsView = app.ListView.extend({
+	className: 'contenidos-directorio',
+	events: {
+		'click .go-back': 'goBack'
+	},
 	initialize: function () {
 		var me = this;
 		this.on('update', function (token) {
-			console.log('updating values for folder '+ me.collection.url);
-			me.collection.reset();
-			me.collection.fetch({
-				data: {
-					access_token: token
+			me.$el.fadeOut({
+				complete: function () {
+					me.$el.empty().css({
+						display: 'block'
+					}).html('Cargando...');
+					me.collection.reset();
+					me.collection.fetch({
+						data: {
+							access_token: token
+						}
+					}).done(function () {
+						me.$el.css({
+							display: 'none'
+						});
+						me.render();
+					});
 				}
 			});
 		});
-		this.collection.on('add', this.render, this);
 	},
-	template: _.template(''),
-	itemView: FolderItemView
+	template: _.template('<div class="navigation-folder"><a class="go-back" href="#"><span class="glyphicon glyphicon-chevron-left"></span> Regresar</a></div>'),
+	itemView: FolderItemView,
+	onRender: function () {
+		this.$el.fadeIn();
+	},
+	goBack: function (evt) {
+		evt.preventDefault();
+		app.instance.goBack();
+	}
+});
+
+var TopExplorerView = app.View.extend({
+	initialize: function () {
+		var me = this;
+		this.on('update', function () {
+			me.render();
+		});
+	},
+	template: _.template('<ol class="breadcrumb"><% for (var x in path) { %><li><%=path[x].name%></li><% } %></ol>'),
 });
 
 var ExplorerLayoutView = app.LayoutView.extend({
-	template: _.template('<div class="body"></div>'),
+	template: _.template('<div class="top"></div><div class="body clearfix"></div>'),
 	regions: {
+		'.top': 'top',
 		'.body': 'view'
 	}
 });
@@ -68,6 +101,12 @@ var ExplorerLayoutView = app.LayoutView.extend({
 app.instance = {
 	init: function () {
 		var me = this;
+		var PathModel = Backbone.Model.extend({
+			defaults: {
+				path: [{ name: 'OneDrive'}]
+			}
+		});
+		this.path = new PathModel();
 		this.currentFolder = new OneDriveDocument({
 			id: 'folder.'+u.get('id')
 		});
@@ -75,6 +114,9 @@ app.instance = {
 			url: this.currentFolder.getContentsUrl()
 		});
 		this.explorer = new ExplorerLayoutView({
+			top: new TopExplorerView({
+				model: this.path
+			}),
 			view: new FolderContentsView({
 				collection: me.currentFolderContents
 			})
@@ -85,7 +127,9 @@ app.instance = {
 	showFolder: function (folder) {
 		this.currentFolderContents.url = folder.getContentsUrl();
 		this.currentFolder = folder;
+		this.path.get('path').push(folder.toJSON());
 		this.explorer.view.trigger('update', this.access_token);
+		this.explorer.top.trigger('update', this.access_token);
 	},
 	goBack: function () {
 		if (this.currentFolder.get('parent_id')) {
@@ -94,6 +138,8 @@ app.instance = {
 			});
 			this.currentFolderContents.url = this.currentFolder.getContentsUrl();
 			this.explorer.view.trigger('update', this.access_token);
+			this.path.get('path').pop();
+			this.explorer.top.trigger('update', this.access_token);
 			this.currentFolder.fetch({
 				data: {
 					access_token: this.access_token

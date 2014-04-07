@@ -1,0 +1,62 @@
+
+
+.top {
+	padding-top: 10px;
+}
+
+.body {
+	border-radius: 11px 11px 0px 0px;
+	padding: 12px;
+	background: #f5f5f5;
+	margin-top: 10px;
+}
+
+.navigation-folder {
+	margin-bottom: 3px;
+}
+
+.contenido-directorio {
+	/*padding: 5px 10px 3px 4px;*/
+	padding-right: 2px;
+	float: left;
+	margin: 2px;
+	height: 110px;
+	width: 110px;
+	overflow: hidden;
+	position: relative;
+	background: #FFF;
+}
+
+.contenido-directorio:hover {
+	background: #EBF5FF;
+}
+
+.contenido-directorio a {
+	width: inherit;
+	height: inherit;
+	display: block;
+	overflow: hidden;
+	position: relative;
+	z-index: 2;
+}
+
+.contenido-directorio a span {
+	position: absolute;
+	bottom: 1px;
+	left: 1px;
+	z-index: 1;
+}
+
+.contenido-directorio img {
+	width: inherit;
+	position: absolute;
+	top: 2px;
+	z-index: 1;
+}
+
+.folder-icon {
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	z-index: 3;
+}
